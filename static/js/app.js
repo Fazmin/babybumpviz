@@ -10,6 +10,7 @@ class BabyKickApp {
         this.startY = 0;
         this.imageScale = 1;
         this.theme = 'dark';
+        this.lastResults = null;
         
         this.init();
     }
@@ -18,6 +19,24 @@ class BabyKickApp {
         this.initTheme();
         this.bindEvents();
         this.setupSliders();
+        this.setupResizeHandler();
+    }
+    
+    setupResizeHandler() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Redraw timeline on resize if results are shown
+                if (this.lastResults) {
+                    this.drawTimeline(
+                        this.lastResults.magnitude_history,
+                        this.lastResults.kick_events,
+                        this.lastResults.metadata.fps
+                    );
+                }
+            }, 250);
+        });
     }
     
     initTheme() {
@@ -50,6 +69,15 @@ class BabyKickApp {
         this.theme = this.theme === 'dark' ? 'light' : 'dark';
         this.applyTheme();
         localStorage.setItem('babykick-theme', this.theme);
+        
+        // Redraw timeline if results are shown
+        if (this.lastResults) {
+            this.drawTimeline(
+                this.lastResults.magnitude_history,
+                this.lastResults.kick_events,
+                this.lastResults.metadata.fps
+            );
+        }
     }
     
     bindEvents() {
@@ -366,26 +394,43 @@ class BabyKickApp {
         const video = document.getElementById('result-video');
         video.src = data.output_video;
         
-        // Draw timeline
-        this.drawTimeline(data.magnitude_history, data.kick_events, data.metadata.fps);
-        
         // Populate kicks table
         this.populateKicksTable(data.kick_events);
         
+        // Show section first, then draw timeline after it's visible
         this.showSection('results');
+        
+        // Store data for timeline redraw
+        this.lastResults = data;
+        
+        // Draw timeline after DOM update (use requestAnimationFrame to ensure visibility)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.drawTimeline(data.magnitude_history, data.kick_events, data.metadata.fps);
+            });
+        });
     }
     
     drawTimeline(magnitudeHistory, kickEvents, fps) {
         const canvas = document.getElementById('timeline-canvas');
+        const container = canvas.parentElement;
         const ctx = canvas.getContext('2d');
         
-        // Set canvas size
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
+        // Get actual container dimensions
+        const containerWidth = container.clientWidth - 48; // Account for padding
+        const containerHeight = 150;
+        
+        // Set canvas size with device pixel ratio for sharp rendering
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = containerWidth * dpr;
+        canvas.height = containerHeight * dpr;
+        canvas.style.width = containerWidth + 'px';
+        canvas.style.height = containerHeight + 'px';
+        ctx.scale(dpr, dpr);
         
         const padding = 40;
-        const width = canvas.width - padding * 2;
-        const height = canvas.height - padding * 2;
+        const width = containerWidth - padding * 2;
+        const height = containerHeight - padding * 2;
         
         // Clear canvas with theme-aware background
         const bgColor = this.theme === 'light' ? '#ffffff' : '#0a0a0f';
