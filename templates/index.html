@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Kick Visualizer</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">👶</span>
+                <span class="logo-text">Baby Kick Visualizer</span>
+            </div>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                <span class="theme-icon-dark">🌙</span>
+                <span class="theme-icon-light">☀️</span>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Landing Section -->
+            <section id="landing-section" class="section active">
+                <div class="hero">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">Visualize</span> Your Baby's Movements
+                    </h1>
+                    <p class="hero-subtitle">
+                        Advanced motion detection technology to capture and visualize 
+                        those precious moments when your baby kicks. Transform your 
+                        pregnancy videos into stunning heat map visualizations.
+                    </p>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎯</div>
+                            <h3>Smart Detection</h3>
+                            <p>AI-powered algorithm distinguishes kicks from breathing</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🌡️</div>
+                            <h3>Heat Maps</h3>
+                            <p>Beautiful topographical color overlays</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Analytics</h3>
+                            <p>Track kick frequency and intensity</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-section">
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon">📁</div>
+                        <h3>Upload Your Video</h3>
+                        <p>Drag & drop or click to browse</p>
+                        <p class="upload-hint">Supports MP4, AVI, MOV</p>
+                        <input type="file" id="video-input" accept="video/*" hidden>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ROI Selection Section -->
+            <section id="roi-section" class="section">
+                <div class="section-header">
+                    <h2>Select Region of Interest</h2>
+                    <p>Draw a rectangle around the abdomen area</p>
+                </div>
+                
+                <div class="video-info" id="video-info"></div>
+                
+                <div class="roi-container">
+                    <canvas id="roi-canvas"></canvas>
+                    <img id="preview-image" alt="Video preview">
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label>Sensitivity</label>
+                        <input type="range" id="sensitivity" min="0.5" max="3" step="0.1" value="1">
+                        <span class="control-value" id="sensitivity-value">1.0</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Magnitude Threshold</label>
+                        <input type="range" id="magnitude" min="0.5" max="5" step="0.25" value="2">
+                        <span class="control-value" id="magnitude-value">2.0</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Overlay Opacity</label>
+                        <input type="range" id="opacity" min="0.1" max="0.9" step="0.05" value="0.5">
+                        <span class="control-value" id="opacity-value">0.5</span>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-contours" checked>
+                            Show Contour Lines
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-vectors">
+                            Show Motion Vectors
+                        </label>
+                    </div>
+                    <div class="control-group">
+                        <label>Display Mode</label>
+                        <select id="display-mode">
+                            <option value="overlay">Overlay</option>
+                            <option value="side_by_side">Side by Side</option>
+                            <option value="heatmap">Heat Map Only</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="back-btn">← Back</button>
+                    <button class="btn btn-primary" id="analyze-btn">🚀 Start Analysis</button>
+                </div>
+            </section>
+
+            <!-- Processing Section -->
+            <section id="processing-section" class="section">
+                <div class="processing-container">
+                    <div class="processing-animation">
+                        <div class="pulse-circle"></div>
+                        <span class="processing-icon">🔬</span>
+                    </div>
+                    <h2>Analyzing Video...</h2>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">0%</p>
+                    <p class="processing-hint">Detecting motion patterns and identifying kicks</p>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="section">
+                <div class="section-header">
+                    <h2>🎉 Analysis Complete</h2>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-kicks">0</div>
+                        <div class="stat-label">Kicks Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-intensity">0.0</div>
+                        <div class="stat-label">Avg Intensity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-confidence">0%</div>
+                        <div class="stat-label">Avg Confidence</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-duration">0s</div>
+                        <div class="stat-label">Duration</div>
+                    </div>
+                </div>
+                
+                <!-- Video Player -->
+                <div class="video-player-container">
+                    <video id="result-video" controls></video>
+                </div>
+                
+                <!-- Timeline -->
+                <div class="timeline-container">
+                    <h3>Motion Timeline</h3>
+                    <canvas id="timeline-canvas"></canvas>
+                </div>
+                
+                <!-- Kick Events Table -->
+                <div class="kicks-table-container">
+                    <h3>Detected Kicks</h3>
+                    <table class="kicks-table" id="kicks-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Time</th>
+                                <th>Intensity</th>
+                                <th>Duration</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kicks-tbody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- Export Buttons -->
+                <div class="export-buttons">
+                    <button class="btn btn-export" id="export-video">📹 Download Video</button>
+                    <button class="btn btn-export" id="export-csv">📊 Export CSV</button>
+                    <button class="btn btn-export" id="export-json">📋 Export JSON</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="new-analysis">🔄 New Analysis</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Made with ❤️ for expecting parents</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
