@@ -243,7 +243,7 @@ class BabyKickApp {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #7c3aed, #a855f7);
+                background: linear-gradient(135deg, #ec4899, #f472b6);
                 color: white;
                 padding: 16px 32px;
                 border-radius: 12px;
@@ -251,7 +251,7 @@ class BabyKickApp {
                 font-weight: 600;
                 z-index: 10000;
                 pointer-events: none;
-                box-shadow: 0 10px 40px rgba(124, 58, 237, 0.5);
+                box-shadow: 0 10px 40px rgba(236, 72, 153, 0.5);
                 animation: kickFeedback 0.8s ease-out forwards;
             `;
             document.body.appendChild(feedback);
@@ -323,7 +323,7 @@ class BabyKickApp {
                 font-weight: 500;
                 z-index: 10000;
                 pointer-events: none;
-                border: 1px solid #ef4444;
+                border: 1px solid #db2777;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             `;
             document.body.appendChild(tooltip);
@@ -359,7 +359,7 @@ class BabyKickApp {
         ctx.scale(dpr, dpr);
         ctx.beginPath();
         ctx.arc(marker.x, marker.y, 20, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.fillStyle = 'rgba(219, 39, 119, 0.5)';
         ctx.fill();
         ctx.restore();
         
@@ -527,13 +527,13 @@ class BabyKickApp {
         ctx.clearRect(scaledX, scaledY, scaledW, scaledH);
         
         // Draw ROI border
-        ctx.strokeStyle = '#7c3aed';
+        ctx.strokeStyle = '#ec4899';
         ctx.lineWidth = 3;
         ctx.strokeRect(scaledX, scaledY, scaledW, scaledH);
         
         // Draw corner handles
         const handleSize = 10;
-        ctx.fillStyle = '#7c3aed';
+        ctx.fillStyle = '#ec4899';
         
         // Top-left
         ctx.fillRect(scaledX - handleSize/2, scaledY - handleSize/2, handleSize, handleSize);
@@ -730,7 +730,7 @@ class BabyKickApp {
         }
         
         // Draw the line
-        ctx.strokeStyle = '#7c3aed';
+        ctx.strokeStyle = '#ec4899';
         ctx.lineWidth = 2;
         ctx.beginPath();
         
@@ -760,7 +760,7 @@ class BabyKickApp {
             ctx.lineTo(padding + width, padding + height);
             ctx.lineTo(padding, padding + height);
             ctx.closePath();
-            ctx.fillStyle = 'rgba(124, 58, 237, 0.15)';
+            ctx.fillStyle = 'rgba(236, 72, 153, 0.15)';
             ctx.fill();
         }
         
@@ -786,19 +786,19 @@ class BabyKickApp {
                 // Draw pulsing outer ring
                 ctx.beginPath();
                 ctx.arc(x, y, 16, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.fillStyle = 'rgba(219, 39, 119, 0.15)';
                 ctx.fill();
                 
                 // Draw outer glow
                 ctx.beginPath();
                 ctx.arc(x, y, 12, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.fillStyle = 'rgba(219, 39, 119, 0.3)';
                 ctx.fill();
                 
                 // Draw marker body
                 ctx.beginPath();
                 ctx.arc(x, y, 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#ef4444';
+                ctx.fillStyle = '#db2777';
                 ctx.fill();
                 
                 // Draw white border
@@ -841,7 +841,7 @@ class BabyKickApp {
             const legendX = containerWidth - 120;
             const legendY = padding + 10;
             
-            ctx.fillStyle = '#ef4444';
+            ctx.fillStyle = '#db2777';
             ctx.beginPath();
             ctx.arc(legendX, legendY, 5, 0, Math.PI * 2);
             ctx.fill();

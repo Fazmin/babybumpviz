@@ -1,38 +1,44 @@
 /* Baby Kick Visualizer - Custom Styles */
+/* Color Palette: White, Dark Gray, Pink */
 
 /* Dark Theme (Default) */
 :root {
-    --bg-main: #0a0a0f;
-    --bg-card: #14141f;
-    --bg-card-hover: #1a1a2e;
-    --bg-input: #0a0a0f;
-    --accent-primary: #7c3aed;
-    --accent-secondary: #a855f7;
-    --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
+    --bg-main: #111111;
+    --bg-card: #1a1a1a;
+    --bg-card-hover: #252525;
+    --bg-input: #111111;
+    --bg-elevated: #2a2a2a;
+    --accent-primary: #ec4899;
+    --accent-secondary: #f472b6;
+    --accent-tertiary: #db2777;
+    --accent-gradient: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #f472b6 100%);
     --text-primary: #ffffff;
-    --text-secondary: #a0a0b0;
-    --text-muted: #6b6b7b;
-    --border-color: #2a2a3e;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --error: #ef4444;
+    --text-secondary: #a0a0a0;
+    --text-muted: #666666;
+    --border-color: #333333;
+    --success: #ec4899;
+    --warning: #f472b6;
+    --error: #db2777;
     --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    --shadow-color: rgba(0, 0, 0, 0.3);
-    --timeline-bg: #0a0a0f;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --timeline-bg: #1a1a1a;
+    --pink-glow: rgba(236, 72, 153, 0.15);
 }
 
 /* Light Theme */
 [data-theme="light"] {
-    --bg-main: #f8f9fc;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f0f1f5;
+    --bg-main: #ffffff;
+    --bg-card: #f8f8f8;
+    --bg-card-hover: #f0f0f0;
     --bg-input: #ffffff;
-    --text-primary: #1a1a2e;
-    --text-secondary: #5a5a6e;
-    --text-muted: #8a8a9e;
-    --border-color: #e0e0e8;
-    --shadow-color: rgba(124, 58, 237, 0.1);
-    --timeline-bg: #ffffff;
+    --bg-elevated: #e8e8e8;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555555;
+    --text-muted: #888888;
+    --border-color: #dddddd;
+    --shadow-color: rgba(236, 72, 153, 0.15);
+    --timeline-bg: #f8f8f8;
+    --pink-glow: rgba(236, 72, 153, 0.1);
 }
 
 * {
@@ -59,9 +65,9 @@ body::before {
     width: 100%;
     height: 100%;
     background: 
-        radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(192, 132, 252, 0.05) 0%, transparent 70%);
+        radial-gradient(ellipse at 20% 20%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(244, 114, 182, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(219, 39, 119, 0.05) 0%, transparent 70%);
     pointer-events: none;
     z-index: -1;
     transition: opacity 0.3s ease;
@@ -71,14 +77,14 @@ body::before {
 [data-theme="light"] body::before,
 body:has([data-theme="light"])::before {
     background: 
-        radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 20%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(244, 114, 182, 0.04) 0%, transparent 50%);
 }
 
 [data-theme="light"]::before {
     background: 
-        radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 20%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(244, 114, 182, 0.04) 0%, transparent 50%);
 }
 
 .app-container {
@@ -124,7 +130,7 @@ body:has([data-theme="light"])::before {
 .nav-link:hover {
     color: var(--accent-primary);
     border-color: var(--accent-primary);
-    background: rgba(124, 58, 237, 0.1);
+    background: rgba(236, 72, 153, 0.1);
 }
 
 /* Theme Toggle */
@@ -224,19 +230,32 @@ body:has([data-theme="light"])::before {
 }
 
 .hero-subtitle {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
-    max-width: 600px;
-    margin: 0 auto 50px;
-    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
 }
 
-/* Features Grid */
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
-    margin-bottom: 60px;
+/* Compact Hero */
+.hero-compact {
+    padding: 40px 0 20px;
+}
+
+.hero-compact .hero-subtitle {
+    margin-bottom: 0;
+}
+
+/* Upload Section Centered */
+.upload-section-centered {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0 60px;
+}
+
+.upload-section-centered .upload-area {
+    max-width: 500px;
+    width: 100%;
 }
 
 .feature-card {
@@ -432,7 +451,7 @@ body:has([data-theme="light"])::before {
     font-weight: 400;
     line-height: 1.6;
     color: var(--text-primary);
-    box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 10px 40px rgba(236, 72, 153, 0.3);
     opacity: 0;
     visibility: hidden;
     transition: all 0.25s ease;
@@ -558,12 +577,12 @@ select {
 .btn-primary {
     background: var(--accent-gradient);
     color: white;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+    box-shadow: 0 4px 20px rgba(236, 72, 153, 0.4);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(124, 58, 237, 0.5);
+    box-shadow: 0 6px 30px rgba(236, 72, 153, 0.5);
 }
 
 .btn-secondary {

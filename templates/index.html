@@ -28,36 +28,20 @@
         <main class="main-content">
             <!-- Landing Section -->
             <section id="landing-section" class="section active">
-                <div class="hero">
+                <div class="hero hero-compact">
                     <h1 class="hero-title">
                         <span class="gradient-text">Visualize</span> Your Baby's Movements
                     </h1>
                     <p class="hero-subtitle">
-                        Advanced motion detection technology to capture and visualize 
-                        those precious moments when your baby kicks. Transform your 
-                        pregnancy videos into stunning heat map visualizations.
+                        Upload a video of your pregnant belly and our computer vision algorithm 
+                        will detect and highlight baby kicks using heat map overlays. The system 
+                        uses optical flow analysis to distinguish real kicks from breathing movements, 
+                        giving you a beautiful visualization of those precious moments.
                     </p>
-                    <div class="features-grid">
-                        <div class="feature-card">
-                            <div class="feature-icon">🎯</div>
-                            <h3>Smart Detection</h3>
-                            <p>AI-powered algorithm distinguishes kicks from breathing</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🌡️</div>
-                            <h3>Heat Maps</h3>
-                            <p>Beautiful topographical color overlays</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">📊</div>
-                            <h3>Analytics</h3>
-                            <p>Track kick frequency and intensity</p>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Upload Area -->
-                <div class="upload-section">
+                <div class="upload-section upload-section-centered">
                     <div class="upload-area" id="upload-area">
                         <div class="upload-icon">📁</div>
                         <h3>Upload Your Video</h3>
@@ -232,7 +216,7 @@
                             </label>
                         </div>
                     </div>
-                    <p class="timeline-hint">💡 Click on red kick markers to jump to that moment in the video</p>
+                    <p class="timeline-hint">💡 Click on pink kick markers to jump to that moment in the video</p>
                     <canvas id="timeline-canvas"></canvas>
                 </div>
                 
