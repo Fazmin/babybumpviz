@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Documentation - Baby Kick Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/technical.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <a href="/" class="back-to-app">← Back to App</a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </header>
+
+        <main class="docs-main">
+            <div class="docs-container">
+                <!-- Hero Section -->
+                <section class="docs-hero">
+                    <h1>Technical Documentation</h1>
+                    <p class="subtitle">A deep dive into the computer vision algorithms powering baby kick detection</p>
+                    <div class="tech-badges">
+                        <span class="badge">Python</span>
+                        <span class="badge">OpenCV</span>
+                        <span class="badge">NumPy</span>
+                        <span class="badge">Optical Flow</span>
+                        <span class="badge">Signal Processing</span>
+                    </div>
+                </section>
+
+                <!-- Table of Contents -->
+                <nav class="toc">
+                    <h2>Contents</h2>
+                    <ol>
+                        <li><a href="#overview">System Overview</a></li>
+                        <li><a href="#pipeline">Processing Pipeline</a></li>
+                        <li><a href="#optical-flow">Optical Flow Computation</a></li>
+                        <li><a href="#motion-analysis">Motion Analysis</a></li>
+                        <li><a href="#kick-detection">Kick vs Breathing Differentiation</a></li>
+                        <li><a href="#visualization">Visualization Techniques</a></li>
+                        <li><a href="#parameters">Parameter Tuning Guide</a></li>
+                        <li><a href="#math">Mathematical Foundations</a></li>
+                    </ol>
+                </nav>
+
+                <!-- Section 1: Overview -->
+                <section id="overview" class="docs-section">
+                    <h2><span class="section-number">01</span> System Overview</h2>
+                    
+                    <div class="info-card">
+                        <h3>What This System Does</h3>
+                        <p>The Baby Kick Visualizer uses <strong>computer vision</strong> and <strong>signal processing</strong> techniques to detect and visualize fetal movements in video recordings of a pregnant abdomen. It differentiates between:</p>
+                        <ul>
+                            <li><strong>Baby kicks</strong> — rapid, localized movements with high intensity</li>
+                            <li><strong>Breathing motions</strong> — slow, rhythmic, whole-abdomen movements</li>
+                        </ul>
+                    </div>
+
+                    <div class="architecture-diagram">
+                        <h3>System Architecture</h3>
+                        <div class="diagram">
+                            <div class="diagram-flow">
+                                <div class="diagram-box input">
+                                    <span class="icon">📹</span>
+                                    <span class="label">Video Input</span>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="diagram-box process">
+                                    <span class="icon">🔄</span>
+                                    <span class="label">Frame Extraction</span>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="diagram-box process">
+                                    <span class="icon">👁️</span>
+                                    <span class="label">Optical Flow</span>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="diagram-box process">
+                                    <span class="icon">📊</span>
+                                    <span class="label">Motion Analysis</span>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="diagram-box process">
+                                    <span class="icon">🎯</span>
+                                    <span class="label">Kick Detection</span>
+                                </div>
+                                <div class="arrow">→</div>
+                                <div class="diagram-box output">
+                                    <span class="icon">🎨</span>
+                                    <span class="label">Visualization</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-section">
+                        <h3>Core Technologies</h3>
+                        <div class="tech-grid">
+                            <div class="tech-item">
+                                <h4>OpenCV (cv2)</h4>
+                                <p>Industry-standard computer vision library. We use it for video I/O, image processing, and optical flow computation.</p>
+                            </div>
+                            <div class="tech-item">
+                                <h4>NumPy</h4>
+                                <p>Numerical computing library for efficient array operations. All frame data and motion vectors are processed as NumPy arrays.</p>
+                            </div>
+                            <div class="tech-item">
+                                <h4>SciPy</h4>
+                                <p>Scientific computing library used for signal filtering (bandpass filters) and statistical analysis.</p>
+                            </div>
+                            <div class="tech-item">
+                                <h4>Matplotlib</h4>
+                                <p>Visualization library for generating heat maps, contour plots, and timeline graphs.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Pipeline -->
+                <section id="pipeline" class="docs-section">
+                    <h2><span class="section-number">02</span> Processing Pipeline</h2>
+                    
+                    <div class="pipeline-stages">
+                        <div class="stage">
+                            <div class="stage-header">
+                                <span class="stage-num">1</span>
+                                <h3>Video Loading & Preprocessing</h3>
+                            </div>
+                            <div class="stage-content">
+                                <p>The video is loaded frame-by-frame using OpenCV's VideoCapture. Each frame undergoes preprocessing:</p>
+                                <ul>
+                                    <li>Convert BGR → Grayscale (for optical flow)</li>
+                                    <li>Apply Gaussian blur to reduce noise</li>
+                                    <li>Crop to Region of Interest (ROI) if specified</li>
+                                </ul>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span class="filename">video_processor.py</span>
+                                        <span class="language">Python</span>
+                                    </div>
+<pre><code class="python">def preprocess_frame(self, frame: np.ndarray) -> np.ndarray:
+    """Convert frame to grayscale and apply noise reduction."""
+    # Convert to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+    # Apply Gaussian blur to reduce noise
+    # Kernel size 5x5 provides good noise reduction
+    # while preserving motion edges
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    return blurred</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stage">
+                            <div class="stage-header">
+                                <span class="stage-num">2</span>
+                                <h3>Optical Flow Computation</h3>
+                            </div>
+                            <div class="stage-content">
+                                <p>Dense optical flow is computed between consecutive frames using the Farnebäck algorithm. This produces a 2D vector field representing motion at each pixel.</p>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span class="filename">motion_detector.py</span>
+                                        <span class="language">Python</span>
+                                    </div>
+<pre><code class="python">def compute_optical_flow(self, prev_frame, curr_frame):
+    """Compute dense optical flow using Farnebäck method."""
+    flow = cv2.calcOpticalFlowFarneback(
+        prev_frame,           # Previous frame (grayscale)
+        curr_frame,           # Current frame (grayscale)
+        None,                 # Output flow array
+        pyr_scale=0.5,        # Pyramid scale factor
+        levels=3,             # Number of pyramid levels
+        winsize=15,           # Averaging window size
+        iterations=3,         # Iterations per pyramid level
+        poly_n=5,             # Polynomial expansion neighborhood
+        poly_sigma=1.2,       # Gaussian std for polynomial
+        flags=0
+    )
+    return flow  # Shape: (H, W, 2) → [dx, dy] per pixel</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stage">
+                            <div class="stage-header">
+                                <span class="stage-num">3</span>
+                                <h3>Motion Vector Analysis</h3>
+                            </div>
+                            <div class="stage-content">
+                                <p>The optical flow vectors are analyzed to extract meaningful motion metrics:</p>
+                                <div class="metric-grid">
+                                    <div class="metric">
+                                        <h4>Magnitude</h4>
+                                        <p>The speed of motion at each pixel</p>
+                                        <code>magnitude = √(dx² + dy²)</code>
+                                    </div>
+                                    <div class="metric">
+                                        <h4>Direction</h4>
+                                        <p>The angle of motion (0-360°)</p>
+                                        <code>angle = atan2(dy, dx)</code>
+                                    </div>
+                                    <div class="metric">
+                                        <h4>Coherence</h4>
+                                        <p>How uniform the motion direction is</p>
+                                        <code>coherence = |mean(unit_vectors)|</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stage">
+                            <div class="stage-header">
+                                <span class="stage-num">4</span>
+                                <h3>Temporal Filtering</h3>
+                            </div>
+                            <div class="stage-content">
+                                <p>A bandpass filter isolates kick frequencies from breathing frequencies:</p>
+                                <div class="filter-diagram">
+                                    <div class="frequency-band breathing">
+                                        <span class="band-label">Breathing</span>
+                                        <span class="band-range">0.1 - 0.5 Hz</span>
+                                        <span class="band-desc">Filtered OUT</span>
+                                    </div>
+                                    <div class="frequency-band kicks">
+                                        <span class="band-label">Kicks</span>
+                                        <span class="band-range">0.5 - 5.0 Hz</span>
+                                        <span class="band-desc">PASSED through</span>
+                                    </div>
+                                    <div class="frequency-band noise">
+                                        <span class="band-label">High-freq Noise</span>
+                                        <span class="band-range">> 5.0 Hz</span>
+                                        <span class="band-desc">Filtered OUT</span>
+                                    </div>
+                                </div>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span class="filename">kick_detector.py</span>
+                                        <span class="language">Python</span>
+                                    </div>
+<pre><code class="python">def apply_bandpass_filter(self, signal, fps):
+    """Apply bandpass filter to isolate kick frequencies."""
+    from scipy.signal import butter, filtfilt
+    
+    # Nyquist frequency
+    nyquist = fps / 2
+    
+    # Kick frequency band (0.5 - 5.0 Hz)
+    low_freq = 0.5 / nyquist   # Normalized low cutoff
+    high_freq = 5.0 / nyquist  # Normalized high cutoff
+    
+    # Design 4th-order Butterworth bandpass filter
+    b, a = butter(4, [low_freq, high_freq], btype='band')
+    
+    # Apply zero-phase filtering (forward + backward)
+    filtered = filtfilt(b, a, signal)
+    
+    return filtered</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stage">
+                            <div class="stage-header">
+                                <span class="stage-num">5</span>
+                                <h3>Kick Detection & Classification</h3>
+                            </div>
+                            <div class="stage-content">
+                                <p>Kicks are detected by analyzing motion peaks that meet specific criteria:</p>
+                                <div class="criteria-list">
+                                    <div class="criterion">
+                                        <span class="check">✓</span>
+                                        <div>
+                                            <h4>Intensity Threshold</h4>
+                                            <p>Motion magnitude exceeds baseline + (threshold × std_dev)</p>
+                                        </div>
+                                    </div>
+                                    <div class="criterion">
+                                        <span class="check">✓</span>
+                                        <div>
+                                            <h4>Localized Motion</h4>
+                                            <p>Motion is concentrated in < 30% of the ROI area</p>
+                                        </div>
+                                    </div>
+                                    <div class="criterion">
+                                        <span class="check">✓</span>
+                                        <div>
+                                            <h4>Temporal Characteristics</h4>
+                                            <p>Duration between 0.1 - 2.0 seconds (not too fast, not too slow)</p>
+                                        </div>
+                                    </div>
+                                    <div class="criterion">
+                                        <span class="check">✓</span>
+                                        <div>
+                                            <h4>Low Coherence</h4>
+                                            <p>Motion vectors are NOT all pointing same direction (unlike breathing)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Optical Flow -->
+                <section id="optical-flow" class="docs-section">
+                    <h2><span class="section-number">03</span> Optical Flow Computation</h2>
+                    
+                    <div class="explanation-card">
+                        <h3>What is Optical Flow?</h3>
+                        <p>Optical flow is the pattern of apparent motion of objects in a visual scene caused by the relative motion between the observer and the scene. In our case, it captures the movement of the abdomen surface between video frames.</p>
+                    </div>
+
+                    <div class="algorithm-detail">
+                        <h3>The Farnebäck Algorithm</h3>
+                        <p>We use Gunnar Farnebäck's polynomial expansion method, which approximates the neighborhood of each pixel with a polynomial:</p>
+                        
+                        <div class="math-block">
+                            <p>For each pixel, the local image is modeled as:</p>
+                            <div class="equation">
+                                f(x) ≈ x<sup>T</sup>Ax + b<sup>T</sup>x + c
+                            </div>
+                            <p>where A is a symmetric matrix, b is a vector, and c is a scalar.</p>
+                        </div>
+
+                        <div class="visual-example">
+                            <h4>Visual Representation</h4>
+                            <div class="flow-visualization">
+                                <div class="flow-frame">
+                                    <div class="frame-label">Frame t</div>
+                                    <div class="frame-content">
+                                        <div class="abdomen-shape"></div>
+                                    </div>
+                                </div>
+                                <div class="flow-arrows">
+                                    <div class="arrow-grid">
+                                        <span>→</span><span>→</span><span>↗</span>
+                                        <span>→</span><span>↗</span><span>↑</span>
+                                        <span>↗</span><span>↑</span><span>↑</span>
+                                    </div>
+                                    <div class="arrow-label">Motion Vectors</div>
+                                </div>
+                                <div class="flow-frame">
+                                    <div class="frame-label">Frame t+1</div>
+                                    <div class="frame-content">
+                                        <div class="abdomen-shape moved"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Algorithm Parameters Explained</h4>
+                        <table class="params-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Value</th>
+                                    <th>Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>pyr_scale</code></td>
+                                    <td>0.5</td>
+                                    <td>Image scale between pyramid levels. 0.5 means each level is half the size.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>levels</code></td>
+                                    <td>3</td>
+                                    <td>Number of pyramid levels. More levels = detect larger motions but slower.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>winsize</code></td>
+                                    <td>15</td>
+                                    <td>Averaging window size. Larger = smoother but less precise.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>iterations</code></td>
+                                    <td>3</td>
+                                    <td>Refinement iterations per level. More = better accuracy.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>poly_n</code></td>
+                                    <td>5</td>
+                                    <td>Pixel neighborhood for polynomial expansion (5 or 7 typical).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>poly_sigma</code></td>
+                                    <td>1.2</td>
+                                    <td>Standard deviation for Gaussian used in polynomial expansion.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 4: Motion Analysis -->
+                <section id="motion-analysis" class="docs-section">
+                    <h2><span class="section-number">04</span> Motion Analysis</h2>
+                    
+                    <div class="analysis-methods">
+                        <div class="method-card">
+                            <h3>Magnitude Computation</h3>
+                            <p>The magnitude represents the "speed" of motion at each pixel:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">motion_detector.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def compute_magnitude(self, flow):
+    """Compute motion magnitude from optical flow."""
+    # flow shape: (H, W, 2) where [:,:,0] = dx, [:,:,1] = dy
+    dx = flow[:, :, 0]
+    dy = flow[:, :, 1]
+    
+    # Euclidean magnitude: sqrt(dx^2 + dy^2)
+    magnitude = np.sqrt(dx**2 + dy**2)
+    
+    return magnitude  # Shape: (H, W)</code></pre>
+                            </div>
+                            <div class="visual-demo">
+                                <div class="demo-label">Example Output:</div>
+                                <div class="magnitude-heatmap">
+                                    <div class="heatmap-gradient"></div>
+                                    <div class="heatmap-scale">
+                                        <span>0</span>
+                                        <span>Low</span>
+                                        <span>Medium</span>
+                                        <span>High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="method-card">
+                            <h3>Direction Analysis</h3>
+                            <p>Direction helps distinguish between different motion types:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">motion_detector.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def compute_direction(self, flow):
+    """Compute motion direction in degrees."""
+    dx = flow[:, :, 0]
+    dy = flow[:, :, 1]
+    
+    # Compute angle in radians, then convert to degrees
+    angle = np.arctan2(dy, dx)
+    angle_degrees = np.degrees(angle)
+    
+    # Normalize to 0-360 range
+    angle_degrees = (angle_degrees + 360) % 360
+    
+    return angle_degrees</code></pre>
+                            </div>
+                            <div class="direction-wheel">
+                                <div class="wheel">
+                                    <span class="dir" style="--angle: 0deg">→ 0°</span>
+                                    <span class="dir" style="--angle: 90deg">↓ 90°</span>
+                                    <span class="dir" style="--angle: 180deg">← 180°</span>
+                                    <span class="dir" style="--angle: 270deg">↑ 270°</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="method-card">
+                            <h3>Motion Coherence</h3>
+                            <p>Coherence measures how "organized" the motion is. High coherence = all pixels moving same direction (breathing). Low coherence = chaotic motion (kick).</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">kick_detector.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def compute_coherence(self, flow, magnitude):
+    """Compute motion coherence (0 = chaotic, 1 = uniform)."""
+    # Normalize flow vectors to unit length
+    eps = 1e-7  # Prevent division by zero
+    norm = magnitude[:, :, np.newaxis] + eps
+    unit_flow = flow / norm
+    
+    # Only consider pixels with significant motion
+    mask = magnitude > np.percentile(magnitude, 75)
+    
+    if mask.sum() < 10:
+        return 0.0
+    
+    # Mean of unit vectors
+    mean_dx = np.mean(unit_flow[mask, 0])
+    mean_dy = np.mean(unit_flow[mask, 1])
+    
+    # Coherence = magnitude of mean unit vector
+    coherence = np.sqrt(mean_dx**2 + mean_dy**2)
+    
+    return coherence  # 0.0 to 1.0</code></pre>
+                            </div>
+                            <div class="coherence-examples">
+                                <div class="coherence-example">
+                                    <div class="vectors high-coherence">
+                                        <span>→</span><span>→</span><span>→</span>
+                                        <span>→</span><span>→</span><span>→</span>
+                                        <span>→</span><span>→</span><span>→</span>
+                                    </div>
+                                    <div class="example-label">High Coherence (~0.9)<br><small>Breathing motion</small></div>
+                                </div>
+                                <div class="coherence-example">
+                                    <div class="vectors low-coherence">
+                                        <span>↗</span><span>↓</span><span>←</span>
+                                        <span>↑</span><span>↘</span><span>↙</span>
+                                        <span>→</span><span>↖</span><span>↓</span>
+                                    </div>
+                                    <div class="example-label">Low Coherence (~0.2)<br><small>Kick motion</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Kick Detection -->
+                <section id="kick-detection" class="docs-section">
+                    <h2><span class="section-number">05</span> Kick vs Breathing Differentiation</h2>
+                    
+                    <div class="comparison-table">
+                        <h3>Motion Characteristics Comparison</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Characteristic</th>
+                                    <th>Breathing</th>
+                                    <th>Kick</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Frequency</strong></td>
+                                    <td>0.1 - 0.5 Hz (slow, rhythmic)</td>
+                                    <td>0.5 - 5.0 Hz (quick bursts)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Spatial Coverage</strong></td>
+                                    <td>Entire abdomen (> 50%)</td>
+                                    <td>Localized (< 30%)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Motion Coherence</strong></td>
+                                    <td>High (> 0.7) - uniform direction</td>
+                                    <td>Low (< 0.5) - chaotic</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Duration</strong></td>
+                                    <td>2-4 seconds per cycle</td>
+                                    <td>0.1 - 1.5 seconds</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Intensity Pattern</strong></td>
+                                    <td>Smooth sinusoidal</td>
+                                    <td>Sharp spike</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="detection-algorithm">
+                        <h3>Detection Algorithm</h3>
+                        <div class="code-block large">
+                            <div class="code-header">
+                                <span class="filename">kick_detector.py</span>
+                                <span class="language">Python</span>
+                            </div>
+<pre><code class="python">def detect_kicks(self, magnitude_history, flow_history, fps):
+    """
+    Detect kick events from motion history.
+    
+    Args:
+        magnitude_history: List of mean magnitudes per frame
+        flow_history: List of optical flow arrays
+        fps: Video frames per second
+    
+    Returns:
+        List of detected kick events with metadata
+    """
+    kicks = []
+    signal = np.array(magnitude_history)
+    
+    # Step 1: Apply bandpass filter to isolate kick frequencies
+    filtered_signal = self.apply_bandpass_filter(signal, fps)
+    
+    # Step 2: Compute adaptive threshold
+    baseline = np.median(filtered_signal)
+    std_dev = np.std(filtered_signal)
+    threshold = baseline + (self.sensitivity * std_dev)
+    
+    # Step 3: Find peaks above threshold
+    from scipy.signal import find_peaks
+    peaks, properties = find_peaks(
+        filtered_signal,
+        height=threshold,
+        distance=int(fps * 0.3),  # Min 0.3s between kicks
+        prominence=std_dev * 0.5
+    )
+    
+    # Step 4: Validate each peak
+    for peak_idx in peaks:
+        # Check spatial localization
+        flow = flow_history[peak_idx]
+        magnitude = np.sqrt(flow[:,:,0]**2 + flow[:,:,1]**2)
+        
+        active_ratio = np.sum(magnitude > threshold) / magnitude.size
+        if active_ratio > 0.3:  # Too much area = breathing
+            continue
+        
+        # Check coherence
+        coherence = self.compute_coherence(flow, magnitude)
+        if coherence > 0.7:  # Too coherent = breathing
+            continue
+        
+        # Valid kick detected!
+        kicks.append({
+            'frame_number': peak_idx,
+            'timestamp': peak_idx / fps,
+            'intensity': filtered_signal[peak_idx],
+            'coherence': coherence,
+            'area_ratio': active_ratio
+        })
+    
+    return kicks</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="signal-visualization">
+                        <h3>Signal Processing Visualization</h3>
+                        <div class="signal-diagram">
+                            <div class="signal-row">
+                                <span class="signal-label">Raw Signal</span>
+                                <div class="signal-wave raw">
+                                    <svg viewBox="0 0 400 60">
+                                        <path d="M0,30 Q50,10 100,30 Q150,50 200,30 Q250,10 300,30 Q350,50 400,30" fill="none" stroke="currentColor" stroke-width="2"/>
+                                        <circle cx="180" cy="15" r="4" fill="#ef4444"/>
+                                        <circle cx="320" cy="18" r="4" fill="#ef4444"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="signal-row">
+                                <span class="signal-label">After Bandpass</span>
+                                <div class="signal-wave filtered">
+                                    <svg viewBox="0 0 400 60">
+                                        <path d="M0,30 L100,30 L170,30 L180,5 L190,30 L250,30 L310,30 L320,8 L330,30 L400,30" fill="none" stroke="currentColor" stroke-width="2"/>
+                                        <circle cx="180" cy="5" r="5" fill="#ef4444"/>
+                                        <circle cx="320" cy="8" r="5" fill="#ef4444"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="signal-row">
+                                <span class="signal-label">Detected Kicks</span>
+                                <div class="signal-markers">
+                                    <div class="kick-marker" style="left: 45%">
+                                        <span class="marker-icon">🦶</span>
+                                        <span class="marker-time">1.2s</span>
+                                    </div>
+                                    <div class="kick-marker" style="left: 80%">
+                                        <span class="marker-icon">🦶</span>
+                                        <span class="marker-time">3.4s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Visualization -->
+                <section id="visualization" class="docs-section">
+                    <h2><span class="section-number">06</span> Visualization Techniques</h2>
+                    
+                    <div class="viz-methods">
+                        <div class="viz-card">
+                            <h3>🔥 Heat Map Generation</h3>
+                            <p>Motion magnitude is mapped to colors using a colormap (default: "inferno"):</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">visualizer.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def create_heatmap(self, magnitude, colormap='inferno'):
+    """Generate heat map from motion magnitude."""
+    # Normalize magnitude to 0-255
+    normalized = cv2.normalize(
+        magnitude, None, 0, 255, cv2.NORM_MINMAX
+    ).astype(np.uint8)
+    
+    # Apply colormap
+    heatmap = cv2.applyColorMap(normalized, cv2.COLORMAP_INFERNO)
+    
+    return heatmap</code></pre>
+                            </div>
+                            <div class="colormap-preview">
+                                <div class="colormap inferno"></div>
+                                <div class="colormap-labels">
+                                    <span>No Motion</span>
+                                    <span>Low</span>
+                                    <span>Medium</span>
+                                    <span>High</span>
+                                    <span>Intense</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="viz-card">
+                            <h3>📈 Contour Lines</h3>
+                            <p>Topographical lines show motion intensity levels, similar to elevation maps:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">visualizer.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def add_contours(self, frame, magnitude, levels=5):
+    """Add contour lines to visualize motion intensity."""
+    # Create evenly spaced contour levels
+    max_mag = np.max(magnitude)
+    contour_levels = np.linspace(0, max_mag, levels + 1)[1:]
+    
+    for level in contour_levels:
+        # Create binary mask at this level
+        mask = (magnitude >= level).astype(np.uint8)
+        
+        # Find contours
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        
+        # Draw contours with color based on level
+        intensity = int(255 * level / max_mag)
+        color = (intensity, 255 - intensity, 128)
+        cv2.drawContours(frame, contours, -1, color, 1)
+    
+    return frame</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="viz-card">
+                            <h3>➡️ Motion Vectors</h3>
+                            <p>Arrows showing the direction and magnitude of motion at sampled points:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">visualizer.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def draw_motion_vectors(self, frame, flow, step=16, scale=3):
+    """Draw motion vector arrows on the frame."""
+    h, w = flow.shape[:2]
+    
+    # Sample points on a grid
+    for y in range(0, h, step):
+        for x in range(0, w, step):
+            dx, dy = flow[y, x]
+            magnitude = np.sqrt(dx**2 + dy**2)
+            
+            # Only draw if motion is significant
+            if magnitude > 0.5:
+                # Scale arrow length
+                end_x = int(x + dx * scale)
+                end_y = int(y + dy * scale)
+                
+                # Draw arrow
+                cv2.arrowedLine(
+                    frame,
+                    (x, y),
+                    (end_x, end_y),
+                    (0, 255, 255),  # Yellow
+                    1,
+                    tipLength=0.3
+                )
+    
+    return frame</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="viz-card">
+                            <h3>🎨 Overlay Compositing</h3>
+                            <p>Combining the original frame with the heat map using alpha blending:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="filename">visualizer.py</span>
+                                    <span class="language">Python</span>
+                                </div>
+<pre><code class="python">def create_overlay(self, original, heatmap, alpha=0.6):
+    """Blend heatmap with original frame."""
+    # Ensure same size
+    heatmap_resized = cv2.resize(heatmap, (original.shape[1], original.shape[0]))
+    
+    # Alpha blend: output = alpha * heatmap + (1-alpha) * original
+    overlay = cv2.addWeighted(
+        heatmap_resized, alpha,
+        original, 1 - alpha,
+        0
+    )
+    
+    return overlay</code></pre>
+                            </div>
+                            <div class="blend-demo">
+                                <div class="blend-layer original">Original</div>
+                                <div class="blend-symbol">+</div>
+                                <div class="blend-layer heatmap">Heat Map</div>
+                                <div class="blend-symbol">=</div>
+                                <div class="blend-layer result">Overlay</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 7: Parameters -->
+                <section id="parameters" class="docs-section">
+                    <h2><span class="section-number">07</span> Parameter Tuning Guide</h2>
+                    
+                    <div class="param-guide">
+                        <div class="param-card">
+                            <div class="param-header">
+                                <h3>Sensitivity</h3>
+                                <span class="param-range">Range: 0.1 - 5.0 | Default: 1.0</span>
+                            </div>
+                            <div class="param-content">
+                                <p><strong>What it does:</strong> Controls how much motion is needed to register as significant. This is a multiplier for the standard deviation threshold.</p>
+                                <div class="param-formula">
+                                    <code>threshold = baseline + (sensitivity × std_dev)</code>
+                                </div>
+                                <div class="param-effects">
+                                    <div class="effect low">
+                                        <h4>Low (0.1 - 0.5)</h4>
+                                        <p>Detects very small movements. May pick up breathing or camera shake as false positives.</p>
+                                        <span class="use-case">Use when: Baby movements are very subtle</span>
+                                    </div>
+                                    <div class="effect high">
+                                        <h4>High (2.0 - 5.0)</h4>
+                                        <p>Only detects strong, obvious kicks. May miss gentle movements.</p>
+                                        <span class="use-case">Use when: Video has lots of noise or breathing is prominent</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="param-card">
+                            <div class="param-header">
+                                <h3>Min Kick Duration</h3>
+                                <span class="param-range">Range: 1 - 10 frames | Default: 2</span>
+                            </div>
+                            <div class="param-content">
+                                <p><strong>What it does:</strong> Minimum number of consecutive frames that must show elevated motion for it to count as a kick.</p>
+                                <div class="param-effects">
+                                    <div class="effect low">
+                                        <h4>Low (1-2 frames)</h4>
+                                        <p>Captures quick, brief kicks. May include noise spikes.</p>
+                                    </div>
+                                    <div class="effect high">
+                                        <h4>High (5-10 frames)</h4>
+                                        <p>Only captures sustained movements. Filters out quick jabs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="param-card">
+                            <div class="param-header">
+                                <h3>Heat Map Intensity</h3>
+                                <span class="param-range">Range: 0.1 - 2.0 | Default: 0.5</span>
+                            </div>
+                            <div class="param-content">
+                                <p><strong>What it does:</strong> Controls the opacity/brightness of the heat map overlay on the original video.</p>
+                                <div class="intensity-demo">
+                                    <div class="intensity-level" style="--opacity: 0.2">0.2</div>
+                                    <div class="intensity-level" style="--opacity: 0.5">0.5</div>
+                                    <div class="intensity-level" style="--opacity: 0.8">0.8</div>
+                                    <div class="intensity-level" style="--opacity: 1.0">1.0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 8: Math -->
+                <section id="math" class="docs-section">
+                    <h2><span class="section-number">08</span> Mathematical Foundations</h2>
+                    
+                    <div class="math-content">
+                        <div class="math-card">
+                            <h3>Optical Flow Constraint Equation</h3>
+                            <p>The fundamental equation relating image intensity changes to motion:</p>
+                            <div class="equation-box">
+                                <div class="equation large">
+                                    I<sub>x</sub>u + I<sub>y</sub>v + I<sub>t</sub> = 0
+                                </div>
+                                <div class="equation-legend">
+                                    <p><strong>I<sub>x</sub></strong> = Spatial derivative in x direction</p>
+                                    <p><strong>I<sub>y</sub></strong> = Spatial derivative in y direction</p>
+                                    <p><strong>I<sub>t</sub></strong> = Temporal derivative (change over time)</p>
+                                    <p><strong>u, v</strong> = Optical flow velocities (what we solve for)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="math-card">
+                            <h3>Butterworth Bandpass Filter</h3>
+                            <p>The frequency response of our bandpass filter:</p>
+                            <div class="equation-box">
+                                <div class="equation large">
+                                    |H(f)|² = 1 / [1 + (f/f<sub>c</sub>)<sup>2n</sup>]
+                                </div>
+                                <div class="equation-legend">
+                                    <p><strong>f</strong> = Input frequency</p>
+                                    <p><strong>f<sub>c</sub></strong> = Cutoff frequency</p>
+                                    <p><strong>n</strong> = Filter order (we use n=4)</p>
+                                </div>
+                            </div>
+                            <p>For a bandpass, we apply this twice: once as high-pass at 0.5 Hz, once as low-pass at 5.0 Hz.</p>
+                        </div>
+
+                        <div class="math-card">
+                            <h3>Peak Detection with Prominence</h3>
+                            <p>A peak is valid if it "stands out" from its surroundings:</p>
+                            <div class="equation-box">
+                                <div class="equation">
+                                    prominence(p) = height(p) - max(baseline_left, baseline_right)
+                                </div>
+                            </div>
+                            <p>We require <code>prominence > 0.5 × std_dev</code> to ensure the peak is significant and not just noise.</p>
+                        </div>
+
+                        <div class="math-card">
+                            <h3>Motion Coherence Metric</h3>
+                            <p>Coherence measures the alignment of motion vectors:</p>
+                            <div class="equation-box">
+                                <div class="equation">
+                                    C = |Σ(v̂<sub>i</sub>)| / N
+                                </div>
+                                <div class="equation-legend">
+                                    <p><strong>v̂<sub>i</sub></strong> = Unit vector of motion at pixel i</p>
+                                    <p><strong>N</strong> = Number of pixels with significant motion</p>
+                                    <p><strong>C ∈ [0, 1]</strong> = 0 is chaotic, 1 is perfectly uniform</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <footer class="docs-footer">
+                    <div class="footer-content">
+                        <p>Built with ❤️ using Python, OpenCV, and FastAPI</p>
+                        <p class="footer-links">
+                            <a href="/">← Back to App</a>
+                            <a href="https://opencv.org/" target="_blank">OpenCV Docs</a>
+                            <a href="https://numpy.org/" target="_blank">NumPy Docs</a>
+                        </p>
+                    </div>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('babykick-theme', next);
+        });
+
+        // Apply saved theme
+        const savedTheme = localStorage.getItem('babykick-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Smooth scroll for TOC links
+        document.querySelectorAll('.toc a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Highlight current section in TOC
+        const sections = document.querySelectorAll('.docs-section');
+        const tocLinks = document.querySelectorAll('.toc a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

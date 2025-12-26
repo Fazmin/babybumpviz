@@ -64,6 +64,12 @@ async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.get("/technical", response_class=HTMLResponse)
+async def technical_docs(request: Request):
+    """Serve the technical documentation page."""
+    return templates.TemplateResponse("technical.html", {"request": request})
+
+
 @app.post("/api/upload")
 async def upload_video(file: UploadFile = File(...)):
     """Upload a video file for processing."""

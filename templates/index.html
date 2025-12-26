@@ -15,10 +15,13 @@
                 <span class="logo-icon">👶</span>
                 <span class="logo-text">Baby Kick Visualizer</span>
             </div>
-            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-                <span class="theme-icon-dark">🌙</span>
-                <span class="theme-icon-light">☀️</span>
-            </button>
+            <nav class="header-nav">
+                <a href="/technical" class="nav-link">📚 How It Works</a>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon-dark">🌙</span>
+                    <span class="theme-icon-light">☀️</span>
+                </button>
+            </nav>
         </header>
 
         <!-- Main Content -->
@@ -81,34 +84,70 @@
                 
                 <div class="controls-panel">
                     <div class="control-group">
-                        <label>Sensitivity</label>
+                        <div class="label-row">
+                            <label>Sensitivity</label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip">How sensitive the detection is to small movements. Higher values detect even tiny movements but may pick up noise. Lower values only detect stronger movements. Start with 1.0 and adjust based on your video quality.</span>
+                            </div>
+                        </div>
                         <input type="range" id="sensitivity" min="0.5" max="3" step="0.1" value="1">
                         <span class="control-value" id="sensitivity-value">1.0</span>
                     </div>
                     <div class="control-group">
-                        <label>Magnitude Threshold</label>
+                        <div class="label-row">
+                            <label>Magnitude Threshold</label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip">The minimum movement required to count as a "kick". Think of it as a filter - movements below this are ignored. Higher = only strong kicks. Lower = subtle movements too. If kicks are being missed, try lowering this value.</span>
+                            </div>
+                        </div>
                         <input type="range" id="magnitude" min="0.5" max="5" step="0.25" value="2">
                         <span class="control-value" id="magnitude-value">2.0</span>
                     </div>
                     <div class="control-group">
-                        <label>Overlay Opacity</label>
+                        <div class="label-row">
+                            <label>Overlay Opacity</label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip">How transparent or solid the colored heat map appears. 0.1 = almost invisible, mostly see original video. 0.9 = solid colors dominate. 0.5 is a good balance to see both the video and movement visualization.</span>
+                            </div>
+                        </div>
                         <input type="range" id="opacity" min="0.1" max="0.9" step="0.05" value="0.5">
                         <span class="control-value" id="opacity-value">0.5</span>
                     </div>
                     <div class="control-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="show-contours" checked>
-                            Show Contour Lines
-                        </label>
+                        <div class="label-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-contours" checked>
+                                Show Contour Lines
+                            </label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip">Adds topographical lines around areas of similar movement intensity, like elevation lines on a map. Helps you see the "shape" of movement and pinpoint exactly where the kick happened.</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="control-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="show-vectors">
-                            Show Motion Vectors
-                        </label>
+                        <div class="label-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-vectors">
+                                Show Motion Vectors
+                            </label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip">Shows small arrows indicating direction and speed of movement. Arrows point where skin is moving; longer arrows = faster movement. Helps distinguish outward kicks from general breathing motion.</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="control-group">
-                        <label>Display Mode</label>
+                        <div class="label-row">
+                            <label>Display Mode</label>
+                            <div class="info-icon">
+                                ⓘ
+                                <span class="tooltip"><b>Overlay:</b> Heat map on top of video - see kicks in context.<br><b>Side by Side:</b> Original next to heat map - good for comparison.<br><b>Heat Map Only:</b> Just the visualization - clearest view of movement patterns.</span>
+                            </div>
+                        </div>
                         <select id="display-mode">
                             <option value="overlay">Overlay</option>
                             <option value="side_by_side">Side by Side</option>
@@ -172,7 +211,28 @@
                 
                 <!-- Timeline -->
                 <div class="timeline-container">
-                    <h3>Motion Timeline</h3>
+                    <div class="timeline-header">
+                        <h3>Motion Timeline</h3>
+                        <div class="graph-options">
+                            <label class="graph-option">
+                                <input type="checkbox" id="graph-show-grid" checked>
+                                <span>Grid</span>
+                            </label>
+                            <label class="graph-option">
+                                <input type="checkbox" id="graph-show-fill" checked>
+                                <span>Fill</span>
+                            </label>
+                            <label class="graph-option">
+                                <input type="checkbox" id="graph-show-kicks" checked>
+                                <span>Kick Markers</span>
+                            </label>
+                            <label class="graph-option">
+                                <input type="checkbox" id="graph-smooth" checked>
+                                <span>Smooth</span>
+                            </label>
+                        </div>
+                    </div>
+                    <p class="timeline-hint">💡 Click on red kick markers to jump to that moment in the video</p>
                     <canvas id="timeline-canvas"></canvas>
                 </div>
                 

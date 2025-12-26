@@ -11,6 +11,13 @@ class BabyKickApp {
         this.imageScale = 1;
         this.theme = 'dark';
         this.lastResults = null;
+        this.kickMarkers = []; // Store kick marker positions for click detection
+        this.graphOptions = {
+            showGrid: true,
+            showFill: true,
+            showKicks: true,
+            smooth: true
+        };
         
         this.init();
     }
@@ -134,6 +141,230 @@ class BabyKickApp {
         document.getElementById('export-video').addEventListener('click', () => this.exportResults('video'));
         document.getElementById('export-csv').addEventListener('click', () => this.exportResults('csv'));
         document.getElementById('export-json').addEventListener('click', () => this.exportResults('json'));
+        
+        // Timeline canvas click for seeking to kicks
+        const timelineCanvas = document.getElementById('timeline-canvas');
+        timelineCanvas.addEventListener('click', (e) => this.handleTimelineClick(e));
+        timelineCanvas.addEventListener('mousemove', (e) => this.handleTimelineHover(e));
+        timelineCanvas.addEventListener('mouseleave', () => this.handleTimelineLeave());
+        
+        // Graph options
+        document.getElementById('graph-show-grid')?.addEventListener('change', (e) => {
+            this.graphOptions.showGrid = e.target.checked;
+            this.redrawTimeline();
+        });
+        document.getElementById('graph-show-fill')?.addEventListener('change', (e) => {
+            this.graphOptions.showFill = e.target.checked;
+            this.redrawTimeline();
+        });
+        document.getElementById('graph-show-kicks')?.addEventListener('change', (e) => {
+            this.graphOptions.showKicks = e.target.checked;
+            this.redrawTimeline();
+        });
+        document.getElementById('graph-smooth')?.addEventListener('change', (e) => {
+            this.graphOptions.smooth = e.target.checked;
+            this.redrawTimeline();
+        });
+    }
+    
+    redrawTimeline() {
+        if (this.lastResults) {
+            this.drawTimeline(
+                this.lastResults.magnitude_history,
+                this.lastResults.kick_events,
+                this.lastResults.metadata.fps
+            );
+        }
+    }
+    
+    handleTimelineClick(e) {
+        if (!this.lastResults) {
+            console.log('No results available');
+            return;
+        }
+        
+        const canvas = document.getElementById('timeline-canvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        console.log('Timeline clicked at:', x, y, 'Kick markers:', this.kickMarkers.length);
+        
+        // Check if click is near any kick marker
+        if (this.kickMarkers && this.kickMarkers.length > 0) {
+            for (const marker of this.kickMarkers) {
+                const distance = Math.sqrt(
+                    Math.pow(x - marker.x, 2) + Math.pow(y - marker.y, 2)
+                );
+                
+                console.log('Checking marker at:', marker.x, marker.y, 'Distance:', distance);
+                
+                if (distance <= 20) { // 20px click radius
+                    // Seek video to this timestamp
+                    const video = document.getElementById('result-video');
+                    if (video) {
+                        console.log('Seeking to:', marker.timestamp);
+                        video.currentTime = marker.timestamp;
+                        video.play().catch(err => console.log('Play error:', err));
+                        
+                        // Visual feedback
+                        this.highlightMarker(marker);
+                        this.showClickFeedback(marker.timestamp);
+                    }
+                    return;
+                }
+            }
+        }
+        
+        // If no kick marker clicked, seek to clicked position in timeline
+        const padding = 40;
+        const containerWidth = canvas.clientWidth;
+        const width = containerWidth - padding * 2;
+        
+        if (x >= padding && x <= padding + width) {
+            const progress = (x - padding) / width;
+            const video = document.getElementById('result-video');
+            if (video && this.lastResults.metadata) {
+                const seekTime = progress * this.lastResults.metadata.duration;
+                console.log('Seeking timeline to:', seekTime);
+                video.currentTime = seekTime;
+            }
+        }
+    }
+    
+    showClickFeedback(timestamp) {
+        // Create visual feedback
+        let feedback = document.getElementById('kick-feedback');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.id = 'kick-feedback';
+            feedback.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #7c3aed, #a855f7);
+                color: white;
+                padding: 16px 32px;
+                border-radius: 12px;
+                font-size: 1.2rem;
+                font-weight: 600;
+                z-index: 10000;
+                pointer-events: none;
+                box-shadow: 0 10px 40px rgba(124, 58, 237, 0.5);
+                animation: kickFeedback 0.8s ease-out forwards;
+            `;
+            document.body.appendChild(feedback);
+            
+            // Add animation styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes kickFeedback {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        feedback.textContent = `⚡ Kick at ${timestamp.toFixed(2)}s`;
+        feedback.style.animation = 'none';
+        feedback.offsetHeight; // Trigger reflow
+        feedback.style.animation = 'kickFeedback 0.8s ease-out forwards';
+    }
+    
+    handleTimelineHover(e) {
+        const canvas = document.getElementById('timeline-canvas');
+        if (!canvas) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        let isOverMarker = false;
+        let hoveredMarker = null;
+        
+        if (this.kickMarkers && this.kickMarkers.length > 0) {
+            for (const marker of this.kickMarkers) {
+                const distance = Math.sqrt(
+                    Math.pow(x - marker.x, 2) + Math.pow(y - marker.y, 2)
+                );
+                if (distance <= 20) {
+                    isOverMarker = true;
+                    hoveredMarker = marker;
+                    break;
+                }
+            }
+        }
+        
+        canvas.style.cursor = isOverMarker ? 'pointer' : 'crosshair';
+        
+        // Show tooltip on hover
+        if (isOverMarker && hoveredMarker) {
+            this.showMarkerTooltip(e.clientX, e.clientY, hoveredMarker);
+        } else {
+            this.hideMarkerTooltip();
+        }
+    }
+    
+    showMarkerTooltip(x, y, marker) {
+        let tooltip = document.getElementById('marker-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'marker-tooltip';
+            tooltip.style.cssText = `
+                position: fixed;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 8px 14px;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 500;
+                z-index: 10000;
+                pointer-events: none;
+                border: 1px solid #ef4444;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+            document.body.appendChild(tooltip);
+        }
+        
+        tooltip.innerHTML = `🦶 Kick at <strong>${marker.timestamp.toFixed(2)}s</strong><br><span style="font-size:0.8rem;opacity:0.7">Click to jump</span>`;
+        tooltip.style.left = `${x + 15}px`;
+        tooltip.style.top = `${y - 50}px`;
+        tooltip.style.display = 'block';
+    }
+    
+    hideMarkerTooltip() {
+        const tooltip = document.getElementById('marker-tooltip');
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    }
+    
+    handleTimelineLeave() {
+        const canvas = document.getElementById('timeline-canvas');
+        if (canvas) canvas.style.cursor = 'crosshair';
+        this.hideMarkerTooltip();
+    }
+    
+    highlightMarker(marker) {
+        // Flash effect on the timeline when a kick is clicked
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Draw a pulse effect
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.beginPath();
+        ctx.arc(marker.x, marker.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.fill();
+        ctx.restore();
+        
+        // Redraw after animation
+        setTimeout(() => this.redrawTimeline(), 300);
     }
     
     setupSliders() {
@@ -403,6 +634,9 @@ class BabyKickApp {
         // Store data for timeline redraw
         this.lastResults = data;
         
+        // Initialize graph options from checkboxes
+        this.initGraphOptions();
+        
         // Draw timeline after DOM update (use requestAnimationFrame to ensure visibility)
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -411,14 +645,29 @@ class BabyKickApp {
         });
     }
     
+    initGraphOptions() {
+        const gridCheck = document.getElementById('graph-show-grid');
+        const fillCheck = document.getElementById('graph-show-fill');
+        const kicksCheck = document.getElementById('graph-show-kicks');
+        const smoothCheck = document.getElementById('graph-smooth');
+        
+        if (gridCheck) this.graphOptions.showGrid = gridCheck.checked;
+        if (fillCheck) this.graphOptions.showFill = fillCheck.checked;
+        if (kicksCheck) this.graphOptions.showKicks = kicksCheck.checked;
+        if (smoothCheck) this.graphOptions.smooth = smoothCheck.checked;
+    }
+    
     drawTimeline(magnitudeHistory, kickEvents, fps) {
         const canvas = document.getElementById('timeline-canvas');
         const container = canvas.parentElement;
         const ctx = canvas.getContext('2d');
         
+        // Clear kick markers array
+        this.kickMarkers = [];
+        
         // Get actual container dimensions
         const containerWidth = container.clientWidth - 48; // Account for padding
-        const containerHeight = 150;
+        const containerHeight = 180;
         
         // Set canvas size with device pixel ratio for sharp rendering
         const dpr = window.devicePixelRatio || 1;
@@ -442,60 +691,183 @@ class BabyKickApp {
         // Find max magnitude for scaling
         const maxMag = Math.max(...magnitudeHistory, 5);
         
-        // Draw grid with theme-aware colors
-        ctx.strokeStyle = this.theme === 'light' ? '#e0e0e8' : '#2a2a3e';
-        ctx.lineWidth = 1;
-        
-        for (let i = 0; i <= 4; i++) {
-            const y = padding + (height / 4) * i;
-            ctx.beginPath();
-            ctx.moveTo(padding, y);
-            ctx.lineTo(canvas.width - padding, y);
-            ctx.stroke();
+        // Draw grid with theme-aware colors (if enabled)
+        if (this.graphOptions.showGrid) {
+            ctx.strokeStyle = this.theme === 'light' ? '#e0e0e8' : '#2a2a3e';
+            ctx.lineWidth = 1;
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(containerWidth - padding, y);
+                ctx.stroke();
+            }
+            
+            // Vertical grid lines (time markers)
+            const numVertLines = 5;
+            for (let i = 0; i <= numVertLines; i++) {
+                const x = padding + (i / numVertLines) * width;
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, padding + height);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
         
-        // Draw magnitude line
+        // Prepare data points
+        let dataPoints = magnitudeHistory.map((mag, i) => ({
+            x: padding + (i / magnitudeHistory.length) * width,
+            y: padding + height - (mag / maxMag) * height
+        }));
+        
+        // Apply smoothing if enabled
+        if (this.graphOptions.smooth && dataPoints.length > 10) {
+            dataPoints = this.smoothData(dataPoints, 5);
+        }
+        
+        // Draw the line
         ctx.strokeStyle = '#7c3aed';
         ctx.lineWidth = 2;
         ctx.beginPath();
         
-        magnitudeHistory.forEach((mag, i) => {
-            const x = padding + (i / magnitudeHistory.length) * width;
-            const y = padding + height - (mag / maxMag) * height;
-            
+        dataPoints.forEach((point, i) => {
             if (i === 0) {
-                ctx.moveTo(x, y);
+                ctx.moveTo(point.x, point.y);
+            } else if (this.graphOptions.smooth) {
+                // Use bezier curves for smooth lines
+                const prev = dataPoints[i - 1];
+                const cpx = (prev.x + point.x) / 2;
+                ctx.quadraticCurveTo(prev.x, prev.y, cpx, (prev.y + point.y) / 2);
             } else {
-                ctx.lineTo(x, y);
+                ctx.lineTo(point.x, point.y);
             }
         });
         
+        // Complete the last point
+        if (this.graphOptions.smooth && dataPoints.length > 1) {
+            const last = dataPoints[dataPoints.length - 1];
+            ctx.lineTo(last.x, last.y);
+        }
+        
         ctx.stroke();
         
-        // Fill under the line
-        ctx.lineTo(padding + width, padding + height);
-        ctx.lineTo(padding, padding + height);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(124, 58, 237, 0.2)';
-        ctx.fill();
-        
-        // Draw kick markers
-        ctx.fillStyle = '#ef4444';
-        kickEvents.forEach(kick => {
-            const x = padding + (kick.frame_number / magnitudeHistory.length) * width;
-            const y = padding + height - (kick.intensity / maxMag) * height;
-            
-            ctx.beginPath();
-            ctx.arc(x, y, 6, 0, Math.PI * 2);
+        // Fill under the line (if enabled)
+        if (this.graphOptions.showFill) {
+            ctx.lineTo(padding + width, padding + height);
+            ctx.lineTo(padding, padding + height);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(124, 58, 237, 0.15)';
             ctx.fill();
-        });
+        }
+        
+        // Draw kick markers (if enabled)
+        if (this.graphOptions.showKicks && kickEvents && kickEvents.length > 0) {
+            console.log('Drawing', kickEvents.length, 'kick markers');
+            
+            kickEvents.forEach((kick, index) => {
+                const x = padding + (kick.frame_number / magnitudeHistory.length) * width;
+                const y = padding + height - (kick.intensity / maxMag) * height;
+                
+                console.log(`Kick ${index}: x=${x.toFixed(1)}, y=${y.toFixed(1)}, ts=${kick.timestamp}`);
+                
+                // Store marker position for click detection
+                this.kickMarkers.push({
+                    x: x,
+                    y: y,
+                    timestamp: kick.timestamp,
+                    frame: kick.frame_number,
+                    intensity: kick.intensity
+                });
+                
+                // Draw pulsing outer ring
+                ctx.beginPath();
+                ctx.arc(x, y, 16, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.fill();
+                
+                // Draw outer glow
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.fill();
+                
+                // Draw marker body
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#ef4444';
+                ctx.fill();
+                
+                // Draw white border
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw inner highlight
+                ctx.beginPath();
+                ctx.arc(x - 2, y - 2, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fill();
+            });
+            
+            console.log('Total kick markers stored:', this.kickMarkers.length);
+        }
         
         // Draw axes labels with theme-aware colors
         ctx.fillStyle = this.theme === 'light' ? '#5a5a6e' : '#a0a0b0';
         ctx.font = '12px Outfit';
-        ctx.fillText('0s', padding, canvas.height - 10);
-        ctx.fillText(`${(magnitudeHistory.length / fps).toFixed(1)}s`, canvas.width - padding - 30, canvas.height - 10);
-        ctx.fillText('Intensity', 10, padding - 10);
+        
+        // Time labels
+        const duration = magnitudeHistory.length / fps;
+        ctx.fillText('0s', padding - 5, padding + height + 20);
+        ctx.fillText(`${duration.toFixed(1)}s`, containerWidth - padding - 25, padding + height + 20);
+        ctx.fillText(`${(duration / 2).toFixed(1)}s`, padding + width/2 - 10, padding + height + 20);
+        
+        // Y-axis label
+        ctx.save();
+        ctx.translate(15, padding + height/2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText('Intensity', 0, 0);
+        ctx.restore();
+        
+        // Draw legend if kicks are shown
+        if (this.graphOptions.showKicks && kickEvents.length > 0) {
+            const legendX = containerWidth - 120;
+            const legendY = padding + 10;
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(legendX, legendY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = this.theme === 'light' ? '#5a5a6e' : '#a0a0b0';
+            ctx.font = '11px Outfit';
+            ctx.fillText(`${kickEvents.length} kicks detected`, legendX + 12, legendY + 4);
+        }
+    }
+    
+    smoothData(data, windowSize) {
+        // Simple moving average smoothing
+        const smoothed = [];
+        for (let i = 0; i < data.length; i++) {
+            let sumX = 0, sumY = 0, count = 0;
+            for (let j = Math.max(0, i - windowSize); j <= Math.min(data.length - 1, i + windowSize); j++) {
+                sumX += data[j].x;
+                sumY += data[j].y;
+                count++;
+            }
+            smoothed.push({
+                x: data[i].x, // Keep original x
+                y: sumY / count // Average y
+            });
+        }
+        return smoothed;
     }
     
     populateKicksTable(kickEvents) {
